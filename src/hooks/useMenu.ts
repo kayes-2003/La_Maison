@@ -28,6 +28,7 @@ export function useMenu() {
       image_url:     form.image_url.trim() || '🍽️',
       offer_percent: parseInt(form.offer_percent) || 0,
       available:     form.available,
+      is_new:        form.is_new ?? false,
     })
     if (!error) await load()
     return { error }

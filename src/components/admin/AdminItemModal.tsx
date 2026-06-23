@@ -14,7 +14,7 @@ interface AdminItemModalProps {
 
 const blank: MenuItemFormData = {
   name: '', description: '', price: '', category: 'Pizza',
-  image_url: '', offer_percent: '0', available: true,
+  image_url: '', offer_percent: '0', available: true, is_new: false,
 }
 
 export function AdminItemModal({ item, onClose, onSave }: AdminItemModalProps) {
@@ -31,6 +31,7 @@ export function AdminItemModal({ item, onClose, onSave }: AdminItemModalProps) {
         image_url:     item.image_url,
         offer_percent: String(item.offer_percent),
         available:     item.available,
+        is_new:        item.is_new ?? false,
       })
     } else {
       setForm(blank)
@@ -185,16 +186,26 @@ export function AdminItemModal({ item, onClose, onSave }: AdminItemModalProps) {
               </div>
             </div>
 
-            {/* Available toggle */}
-            <label className="flex items-center justify-between gap-4 p-3 bg-surface-100/50 border border-brand-900/30 rounded-xl cursor-pointer">
-              <span className="text-brand-400 text-sm font-medium">Available for ordering</span>
-              <div
-                onClick={() => set('available', !form.available)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${form.available ? 'bg-brand-500' : 'bg-brand-900'}`}
-              >
-                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${form.available ? 'left-5' : 'left-0.5'}`} />
-              </div>
-            </label>
+            {/* Toggles */}
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-4 p-3 bg-surface-100/50 border border-brand-900/30 rounded-xl cursor-pointer">
+                <span className="text-brand-400 text-sm font-medium">Available for ordering</span>
+                <div onClick={() => set('available', !form.available)}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${form.available ? 'bg-brand-500' : 'bg-brand-900'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${form.available ? 'left-5' : 'left-0.5'}`} />
+                </div>
+              </label>
+              <label className="flex items-center justify-between gap-4 p-3 bg-surface-100/50 border border-brand-900/30 rounded-xl cursor-pointer">
+                <div>
+                  <span className="text-brand-400 text-sm font-medium">Mark as New Item</span>
+                  <p className="text-brand-700 text-xs mt-0.5">Shows a NEW badge and appears in New Items filter</p>
+                </div>
+                <div onClick={() => set('is_new', !form.is_new)}
+                  className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${form.is_new ? 'bg-emerald-500' : 'bg-brand-900'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${form.is_new ? 'left-5' : 'left-0.5'}`} />
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* Footer */}

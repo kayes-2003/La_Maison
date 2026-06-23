@@ -5,11 +5,12 @@ import { useCart }     from '@/hooks/useCart'
 import { useOrders }   from '@/hooks/useOrders'
 import { useWishlist } from '@/hooks/useWishlist'
 import { Header }      from '@/components/shared/Header'
+import { AnnouncementBanner } from '@/components/shared/AnnouncementBanner'
 import { HomePage }    from '@/pages/HomePage'
 import { MenuPage }    from '@/pages/MenuPage'
 import { AboutPage }   from '@/pages/AboutPage'
 import { AdminPage }   from '@/pages/AdminPage'
-import { OrderHistoryPage } from '@/components/admin/OrderHistoryPage'
+import { OrderTrackingPage } from '@/components/customer/OrderTrackingPage'
 import { AuthModal }   from '@/components/shared/AuthModal'
 import { CartDrawer }  from '@/components/customer/CartDrawer'
 import { CheckoutPage } from '@/components/customer/CheckoutPage'
@@ -42,13 +43,12 @@ export default function App() {
     await wish.toggle(menuItemId)
   }
 
-  const handleCartClose = () => { setShowCart(false); orders.reload() }
-
   const handleCheckoutSuccess = async () => {
     await cart.clearCart()
     setShowCheckout(false)
     setShowCart(false)
     orders.reload()
+    setView('orders')  // take user to order tracking
   }
 
   if (auth.loading) return <Loader />
@@ -66,6 +66,9 @@ export default function App() {
         activeView={view}
       />
 
+      {/* Global announcement banners */}
+      <AnnouncementBanner />
+
       <main className="flex-1">
         {view === 'admin' && auth.isAdmin ? (
           <AdminPage
@@ -73,7 +76,7 @@ export default function App() {
             onAdd={menu.addItem} onUpdate={menu.updateItem} onDelete={menu.deleteItem}
           />
         ) : view === 'orders' && auth.uid ? (
-          <OrderHistoryPage orders={orders.orders} loading={orders.loading} onViewMenu={() => setView('menu')} />
+          <OrderTrackingPage userId={auth.uid} />
         ) : view === 'menu' ? (
           <MenuPage
             items={menu.items} loading={menu.loading}
@@ -108,7 +111,7 @@ export default function App() {
         <CartDrawer
           summary={cart.summary}
           userId={auth.uid}
-          onClose={handleCartClose}
+          onClose={() => { setShowCart(false); orders.reload() }}
           onRemove={cart.removeFromCart}
           onUpdateQty={cart.updateQuantity}
           onClear={cart.clearCart}

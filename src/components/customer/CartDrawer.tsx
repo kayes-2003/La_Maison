@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard } from 'lucide-react'
 import { discountedPrice, formatPrice, isValidUrl } from '@/lib/utils'
-import { PaymentModal } from '@/components/customer/PaymentModal'
 import toast from 'react-hot-toast'
 import type { CartSummary } from '@/types'
 
@@ -12,10 +11,11 @@ interface CartDrawerProps {
   onRemove:    (cartItemId: string) => void
   onUpdateQty: (cartItemId: string, qty: number) => void
   onClear:     () => void
+  onCheckout?: () => void
 }
 
 export function CartDrawer({
-  summary, userId, onClose, onRemove, onUpdateQty, onClear,
+  summary, userId, onClose, onRemove, onUpdateQty, onClear, onCheckout,
 }: CartDrawerProps) {
   const [showPayment, setShowPayment] = useState(false)
 
@@ -24,6 +24,7 @@ export function CartDrawer({
       toast.error('Please sign in to checkout')
       return
     }
+    if (onCheckout) { onCheckout(); return }
     setShowPayment(true)
   }
 

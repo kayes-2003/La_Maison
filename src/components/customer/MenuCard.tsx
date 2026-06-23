@@ -1,38 +1,52 @@
-import { ShoppingCart, CheckCircle } from 'lucide-react'
+import { ShoppingCart, CheckCircle, Heart } from 'lucide-react'
 import { discountedPrice, formatPrice, isValidUrl } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { ShareMenu } from '@/components/customer/ShareMenu'
+import { ProductReview } from '@/components/customer/ProductReview'
 import type { MenuItem } from '@/types'
 
 interface MenuCardProps {
-  item:       MenuItem
-  inCart:     boolean
-  onAddToCart: () => void
+  item:           MenuItem
+  inCart:         boolean
+  inWishlist:     boolean
+  userId:         string | null
+  onAddToCart:    () => void
+  onToggleWish:   () => void
+  onLoginRequired: () => void
 }
 
-export function MenuCard({ item, inCart, onAddToCart }: MenuCardProps) {
+export function MenuCard({ item, inCart, inWishlist, userId, onAddToCart, onToggleWish, onLoginRequired }: MenuCardProps) {
   const finalPrice = discountedPrice(item.price, item.offer_percent)
   const hasImage   = isValidUrl(item.image_url)
 
   return (
     <div className={cn('menu-card group', !item.available && 'opacity-50')}>
-      {/* Offer badge */}
-      {item.offer_percent > 0 && (
-        <span className="badge-offer">-{item.offer_percent}%</span>
-      )}
+      {/* Badges */}
+      {item.offer_percent > 0 && <span className="badge-offer">-{item.offer_percent}%</span>}
+      {!item.available && <span className="badge-unavailable">Unavailable</span>}
 
-      {/* Unavailable badge */}
-      {!item.available && (
-        <span className="badge-unavailable">Unavailable</span>
-      )}
+      {/* Wish + Share top-right */}
+      <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <button
+          onClick={e => { e.stopPropagation(); userId ? onToggleWish() : onLoginRequired() }}
+          className={cn(
+            'p-1.5 rounded-lg transition-colors',
+            inWishlist
+              ? 'text-red-400 bg-red-950/40 border border-red-800/40'
+              : 'text-brand-700 hover:text-red-400 bg-brand-900/50 border border-brand-800/30'
+          )}
+          title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+        >
+          <Heart size={13} className={inWishlist ? 'fill-red-400' : ''} />
+        </button>
+        <ShareMenu item={item} userId={userId} />
+      </div>
 
       {/* Image / Emoji */}
       <div className="h-24 sm:h-28 flex items-center justify-center bg-surface-100/60 border-b border-brand-900/20 overflow-hidden">
         {hasImage ? (
-          <img
-            src={item.image_url}
-            alt={item.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+          <img src={item.image_url} alt={item.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <span className="text-5xl group-hover:scale-110 transition-transform duration-300 select-none">
             {item.image_url || '🍽️'}
@@ -47,20 +61,14 @@ export function MenuCard({ item, inCart, onAddToCart }: MenuCardProps) {
             {item.name}
           </h3>
         </div>
-        <p className="text-brand-800 text-[11px] leading-relaxed mb-2 line-clamp-2">
-          {item.description}
-        </p>
+        <p className="text-brand-800 text-[11px] leading-relaxed mb-2 line-clamp-2">{item.description}</p>
 
         {/* Price + CTA */}
         <div className="flex items-center justify-between gap-1">
           <div className="leading-tight">
-            <span className="font-mono font-bold text-brand-300 text-sm">
-              {formatPrice(finalPrice)}
-            </span>
+            <span className="font-mono font-bold text-brand-300 text-sm">{formatPrice(finalPrice)}</span>
             {item.offer_percent > 0 && (
-              <span className="block text-[10px] text-brand-800 line-through">
-                {formatPrice(item.price)}
-              </span>
+              <span className="block text-[10px] text-brand-800 line-through">{formatPrice(item.price)}</span>
             )}
           </div>
 
@@ -75,12 +83,16 @@ export function MenuCard({ item, inCart, onAddToCart }: MenuCardProps) {
               !item.available && 'opacity-40 pointer-events-none'
             )}
           >
-            {inCart
-              ? <><CheckCircle size={11} /> Added</>
-              : <><ShoppingCart size={11} /> Add</>
-            }
+            {inCart ? <><CheckCircle size={11} /> Added</> : <><ShoppingCart size={11} /> Add</>}
           </button>
         </div>
+
+        {/* Inline reviews + share */}
+        <ProductReview
+          menuItemId={item.id}
+          userId={userId}
+          onLoginRequired={onLoginRequired}
+        />
       </div>
     </div>
   )

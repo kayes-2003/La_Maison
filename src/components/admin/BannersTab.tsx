@@ -148,6 +148,30 @@ function AnnForm({ initial, onSave, onCancel }: {
           <input type="datetime-local" className={inp} value={form.show_until} onChange={e => set('show_until', e.target.value)} />
         </div>
       </div>
+      {/* Live preview */}
+      {(form.title || form.body) && (
+        <div className="mt-2">
+          <p className="text-brand-700 text-[10px] uppercase tracking-wide font-semibold mb-1.5">Live Preview</p>
+          <div className={`relative rounded-lg overflow-hidden ${
+            form.type === 'info'    ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500' :
+            form.type === 'success' ? 'bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500' :
+            form.type === 'warning' ? 'bg-gradient-to-r from-amber-600 via-yellow-500 to-orange-500' :
+                                      'bg-gradient-to-r from-red-600 via-rose-500 to-pink-500'
+          }`}>
+            <div className="px-4 py-2.5 flex items-center gap-3">
+              <span className="relative flex shrink-0">
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white/80" />
+              </span>
+              <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
+                {form.title && <span className="text-white font-bold text-sm">{form.title}</span>}
+                {form.body  && <span className="text-white/85 text-xs">{form.body}</span>}
+                {form.show_until && <span className="font-mono font-bold text-white/90 text-xs bg-black/20 px-2 py-0.5 rounded-full">⏱ Countdown shows here</span>}
+              </div>
+              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white ml-1 shrink-0 text-xs">✕</div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex gap-2 justify-end">
         <button onClick={onCancel} className="btn-ghost gap-1.5"><X size={14} /> Cancel</button>
         <button onClick={() => onSave(form)} className="btn-primary gap-1.5"><Save size={14} /> Save Announcement</button>

@@ -6,6 +6,7 @@ interface ProductReviewProps {
   menuItemId:      string
   userId:          string | null
   onLoginRequired: () => void
+  starsOnly?:      boolean  // card mode: show stars only, no text click handler
 }
 
 interface ItemReview {
@@ -54,7 +55,7 @@ function StarRow({ avg, size = 11 }: { avg: number; size?: number }) {
 }
 
 // ─── Full review modal ────────────────────────────────────────
-function ReviewModal({ menuItemId, userId, reviews, loading, onClose, onLoginRequired, onRefresh }: {
+export function ReviewModal({ menuItemId, userId, reviews, loading, onClose, onLoginRequired, onRefresh }: {
   menuItemId: string; userId: string | null; reviews: ItemReview[]
   loading: boolean; onClose: () => void; onLoginRequired: () => void; onRefresh: () => void
 }) {
@@ -184,7 +185,7 @@ function ReviewModal({ menuItemId, userId, reviews, loading, onClose, onLoginReq
 }
 
 // ─── Inline compact widget ────────────────────────────────────
-export function ProductReview({ menuItemId, userId, onLoginRequired }: ProductReviewProps) {
+export function ProductReview({ menuItemId, userId, onLoginRequired, starsOnly }: ProductReviewProps) {
   const [reviews,  setReviews]  = useState<ItemReview[]>([])
   const [avg,      setAvg]      = useState<number | null>(null)
   const [count,    setCount]    = useState<number | null>(null)
@@ -235,6 +236,25 @@ export function ProductReview({ menuItemId, userId, onLoginRequired }: ProductRe
     setOpen(true)
   }
 
+  // starsOnly mode: just the stars row, no text, clicking is handled by parent card
+  if (starsOnly) {
+    return (
+      <div className="flex items-center gap-1">
+        {avg === null ? (
+          <div className="flex gap-0.5">{Array.from({length:5}).map((_,i)=><Star key={i} size={10} className="text-brand-900/40 animate-pulse"/>)}</div>
+        ) : avg > 0 ? (
+          <>
+            <StarRow avg={avg} size={10} />
+            <span className="text-[10px] text-brand-600 font-mono">{avg.toFixed(1)}</span>
+            <span className="text-[10px] text-brand-800">({count})</span>
+          </>
+        ) : (
+          <div className="flex gap-0.5">{Array.from({length:5}).map((_,i)=><Star key={i} size={10} className="text-brand-900"/>)}</div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
       {/* ── Compact inline row — always shows correct avg ── */}
@@ -253,7 +273,6 @@ export function ProductReview({ menuItemId, userId, onLoginRequired }: ProductRe
           </>
         ) : avg === 0 ? (
           <>
-            {/* Empty stars placeholder */}
             <div className="flex gap-0.5 shrink-0">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} size={11} className="text-brand-900" />
@@ -264,7 +283,6 @@ export function ProductReview({ menuItemId, userId, onLoginRequired }: ProductRe
             </span>
           </>
         ) : (
-          /* Loading state — skeleton */
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star key={i} size={11} className="text-brand-900/50 animate-pulse" />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, LayoutGrid, List, BarChart2, Receipt, UtensilsCrossed, Megaphone, TrendingUp, Globe } from 'lucide-react'
+import { Plus, LayoutGrid, List, BarChart2, Receipt, UtensilsCrossed, Megaphone, TrendingUp, Globe, Award } from 'lucide-react'
 import { AdminItemCard }   from '@/components/admin/AdminItemCard'
 import { AdminItemModal }  from '@/components/admin/AdminItemModal'
 import { CategoryTabs }   from '@/components/shared/CategoryTabs'
@@ -8,6 +8,7 @@ import { DashboardTab }   from '@/components/admin/DashboardTab'
 import { OrdersTab }      from '@/components/admin/OrdersTab'
 import { BannersTab }     from '@/components/admin/BannersTab'
 import { BrandsTab }      from '@/components/admin/BrandsTab'
+import { AwardsTab }      from '@/components/admin/AwardsTab'
 import { SalesAnalytics } from '@/components/admin/SalesAnalytics'
 import { useDashboard }   from '@/hooks/useDashboard'
 import type { MenuItem, MenuItemFormData, Category } from '@/types'
@@ -19,7 +20,7 @@ interface AdminPageProps {
   onDelete: (id: string) => Promise<{ error: unknown }>
 }
 
-type Tab = 'dashboard' | 'analytics' | 'orders' | 'menu' | 'banners' | 'brands'
+type Tab = 'dashboard' | 'analytics' | 'orders' | 'menu' | 'banners' | 'brands' | 'awards'
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'dashboard',  label: 'Dashboard',      icon: BarChart2      },
@@ -28,6 +29,7 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'menu',       label: 'Menu Items',      icon: UtensilsCrossed },
   { id: 'banners',    label: 'Banners & Ads',   icon: Megaphone      },
   { id: 'brands',     label: 'Brands',          icon: Globe          },
+  { id: 'awards',     label: 'Awards',          icon: Award          },
 ]
 
 export function AdminPage({ items, loading, onAdd, onUpdate, onDelete }: AdminPageProps) {
@@ -84,6 +86,7 @@ export function AdminPage({ items, loading, onAdd, onUpdate, onDelete }: AdminPa
       {tab === 'orders'     && (dash.loading ? <Loader /> : <OrdersTab orders={dash.orders} onRefresh={dash.reload} />)}
       {tab === 'banners'    && <BannersTab />}
       {tab === 'brands'     && <BrandsTab />}
+      {tab === 'awards'     && <AwardsTab />}
 
       {tab === 'menu' && (
         <>

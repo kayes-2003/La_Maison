@@ -3,6 +3,7 @@ import { ChefHat, Star, Clock, Award, ArrowRight, MessageSquarePlus } from 'luci
 import { HeroCarousel }     from '@/components/customer/HeroCarousel'
 import { ReviewsCarousel }  from '@/components/shared/ReviewsCarousel'
 import { TrustedBrands }    from '@/components/shared/TrustedBrands'
+import { AwardsSection }    from '@/components/shared/AwardsSection'
 import { ReviewForm }       from '@/components/customer/ReviewForm'
 
 interface HomePageProps { onViewMenu: () => void }
@@ -74,6 +75,9 @@ export function HomePage({ onViewMenu }: HomePageProps) {
 
       {/* ── Trusted Brands Marquee ── */}
       <TrustedBrands />
+
+      {/* ── Awards ── */}
+      <AwardsSection />
 
       {/* ── CTA ── */}
       <section className="py-20 px-4 sm:px-6">

@@ -140,7 +140,6 @@ export function MenuPage({
               key={item.id}
               className="animate-fade-up"
               style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}
-              onClick={() => setPreviewId(item.id)}
             >
               <div onClick={e => e.stopPropagation()} style={{ display: 'contents' }}>
                 <MenuCard
@@ -151,6 +150,7 @@ export function MenuPage({
                   onAddToCart={() => onAddToCart(item.id)}
                   onToggleWish={() => onToggleWish(item.id)}
                   onLoginRequired={onLoginRequired}
+                  onOpenModal={() => setPreviewId(item.id)}
                 />
               </div>
             </div>
@@ -162,7 +162,11 @@ export function MenuPage({
         <MenuItemModal
           item={previewItem}
           inCart={cartItemIds.includes(previewItem.id)}
+          inWishlist={wishlistIds.has(previewItem.id)}
+          userId={userId}
           onAddToCart={() => onAddToCart(previewItem.id)}
+          onToggleWish={() => onToggleWish(previewItem.id)}
+          onLoginRequired={onLoginRequired}
           onClose={() => setPreviewId(null)}
         />
       )}

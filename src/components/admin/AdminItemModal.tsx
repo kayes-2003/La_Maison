@@ -197,8 +197,8 @@ export function AdminItemModal({ item, onClose, onSave }: AdminItemModalProps) {
               </label>
               <label className="flex items-center justify-between gap-4 p-3 bg-surface-100/50 border border-brand-900/30 rounded-xl cursor-pointer">
                 <div>
-                  <span className="text-brand-400 text-sm font-medium">Mark as New Item</span>
-                  <p className="text-brand-700 text-xs mt-0.5">Shows a NEW badge and appears in New Items filter</p>
+                  <span className="text-brand-400 text-sm font-medium">✨ Mark as New</span>
+                  <p className="text-brand-700 text-xs mt-0.5">Shows NEW badge publicly. Turn off when no longer new.</p>
                 </div>
                 <div onClick={() => set('is_new', !form.is_new)}
                   className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${form.is_new ? 'bg-emerald-500' : 'bg-brand-900'}`}>

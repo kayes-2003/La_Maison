@@ -1,21 +1,22 @@
 // import { useState } from 'react'
-import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard } from 'lucide-react'
+import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard, Package } from 'lucide-react'
 import { discountedPrice, formatPrice, isValidUrl } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import type { CartSummary } from '@/types'
 
 interface CartDrawerProps {
-  summary:     CartSummary
-  userId:      string | null
-  onClose:     () => void
-  onRemove:    (cartItemId: string) => void
-  onUpdateQty: (cartItemId: string, qty: number) => void
-  onClear:     () => void
-  onCheckout?: () => void
+  summary:      CartSummary
+  userId:       string | null
+  onClose:      () => void
+  onRemove:     (cartItemId: string) => void
+  onUpdateQty:  (cartItemId: string, qty: number) => void
+  onClear:      () => void
+  onCheckout?:  () => void
+  onViewOrders?: () => void
 }
 
 export function CartDrawer({
-  summary, userId, onClose, onRemove, onUpdateQty, onClear, onCheckout,
+  summary, userId, onClose, onRemove, onUpdateQty, onClear, onCheckout, onViewOrders,
 }: CartDrawerProps) {
 
   const handleCheckout = () => {
@@ -146,8 +147,16 @@ export function CartDrawer({
               className="btn-primary w-full py-3 text-base gap-2"
             >
               <CreditCard size={16} />
-              Checkout with Stripe
+              Proceed to Checkout
             </button>
+            {onViewOrders && (
+              <button
+                onClick={() => { onClose(); onViewOrders() }}
+                className="w-full flex items-center justify-center gap-2 py-2 text-xs text-brand-600 hover:text-brand-300 transition-colors border border-brand-900/30 rounded-xl hover:border-brand-800/50"
+              >
+                <Package size={12} /> Track My Orders
+              </button>
+            )}
             <button onClick={onClear} className="btn-ghost w-full text-brand-700 hover:text-red-400 text-xs">
               Clear cart
             </button>

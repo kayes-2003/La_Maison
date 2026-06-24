@@ -114,6 +114,7 @@ export default function App() {
           onUpdateQty={cart.updateQuantity}
           onClear={cart.clearCart}
           onCheckout={() => { setShowCart(false); setShowCheckout(true) }}
+          onViewOrders={() => { setShowCart(false); setView('orders') }}
         />
       )}
 

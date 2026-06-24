@@ -55,6 +55,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <AnnouncementBanner />
       <Header
         profile={auth.profile}
         cartCount={cart.summary.count}
@@ -65,9 +66,6 @@ export default function App() {
         onNavigate={setView}
         activeView={view}
       />
-
-      {/* Global announcement banners */}
-      <AnnouncementBanner />
 
       <main className="flex-1">
         {view === 'admin' && auth.isAdmin ? (

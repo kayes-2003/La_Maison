@@ -1,44 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ChefHat, Star, Clock, Award, ArrowRight, MessageSquarePlus } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { ReviewForm } from '@/components/customer/ReviewForm'
-import { HeroCarousel } from '@/components/customer/HeroCarousel'
+import { HeroCarousel }     from '@/components/customer/HeroCarousel'
+import { ReviewsCarousel }  from '@/components/shared/ReviewsCarousel'
+import { TrustedBrands }    from '@/components/shared/TrustedBrands'
+import { ReviewForm }       from '@/components/customer/ReviewForm'
 
-interface HomePageProps {
-  onViewMenu: () => void
-}
+interface HomePageProps { onViewMenu: () => void }
 
 const features = [
-  { icon: ChefHat, title: 'Expert Chefs',        desc: 'Our team of award-winning chefs bring decades of fine dining experience to every plate.' },
-  { icon: Star,    title: 'Premium Ingredients', desc: 'We source only the finest seasonal ingredients from local farms and trusted suppliers.' },
-  { icon: Clock,   title: 'Fresh Daily',          desc: 'Every dish is prepared fresh to order. No shortcuts, no reheating — ever.' },
-  { icon: Award,   title: 'Award Winning',        desc: 'Recognised by the Michelin Guide and named Best Fine Dining restaurant 3 years running.' },
+  { icon: ChefHat, title: 'Expert Chefs',         desc: 'Award-winning chefs bring decades of fine dining mastery to every plate.' },
+  { icon: Star,    title: 'Premium Ingredients',  desc: 'Only the finest seasonal ingredients from local farms and trusted suppliers.' },
+  { icon: Clock,   title: 'Fresh Daily',           desc: 'Every dish prepared fresh to order. No shortcuts, no reheating — ever.' },
+  { icon: Award,   title: 'Award Winning',         desc: 'Recognised by the Michelin Guide. Best Fine Dining restaurant 3 years running.' },
 ]
 
-interface Review {
-  id: string; name: string; profession: string | null
-  comment: string; stars: number; created_at: string
-}
-
 export function HomePage({ onViewMenu }: HomePageProps) {
-  const [reviews, setReviews]               = useState<Review[]>([])
-  const [showForm, setShowForm]             = useState(false)
-  const [reviewsLoading, setReviewsLoading] = useState(true)
-
-  const fetchReviews = async () => {
-    setReviewsLoading(true)
-    const { data } = await supabase
-      .from('reviews').select('*').order('created_at', { ascending: false }).limit(20)
-    if (data) setReviews(data as Review[])
-    setReviewsLoading(false)
-  }
-
-  useEffect(() => { fetchReviews() }, [])
+  const [showForm, setShowForm] = useState(false)
 
   return (
     <div className="overflow-x-hidden">
 
-      {/* ── Hero Carousel (Supabase-controlled) ── */}
+      {/* ── Hero ── */}
       <HeroCarousel onViewMenu={onViewMenu} />
 
       {/* ── Features ── */}
@@ -64,58 +46,36 @@ export function HomePage({ onViewMenu }: HomePageProps) {
         </div>
       </section>
 
-      {/* ── Guest Reviews ── */}
+      {/* ── What Our Guests Say (Carousel) ── */}
       <section id="reviews-section" className="py-20 px-4 sm:px-6 bg-surface-50/50">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
+          <div className="text-center mb-12">
+            <p className="text-brand-600 text-xs font-semibold uppercase tracking-[0.25em] mb-3">Real Stories</p>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-300 mb-3">What Our Guests Say</h2>
-            <p className="text-brand-700 text-sm mb-6">Real stories from the people who matter most — our diners.</p>
-            <button onClick={() => setShowForm(f => !f)} className="btn-outline gap-2 rounded-full">
+            <p className="text-brand-700 text-sm mb-6">Honest words from the people who matter most — our diners.</p>
+            <button
+              onClick={() => setShowForm(f => !f)}
+              className="btn-outline gap-2 rounded-full inline-flex items-center"
+            >
               <MessageSquarePlus size={15} />
               {showForm ? 'Hide Form' : 'Leave a Review'}
             </button>
           </div>
 
           {showForm && (
-            <div className="max-w-lg mx-auto mb-10 animate-fade-up">
-              <ReviewForm onSuccess={() => { fetchReviews(); setShowForm(false) }} />
+            <div className="max-w-lg mx-auto mb-12 animate-fade-up">
+              <ReviewForm onSuccess={() => setShowForm(false)} />
             </div>
           )}
 
-          {reviewsLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : reviews.length === 0 ? (
-            <div className="text-center py-12 text-brand-700">
-              <p className="text-4xl mb-3">✨</p>
-              <p className="font-display text-lg text-brand-500">Be the first to leave a review!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {reviews.map(review => (
-                <div key={review.id} className="card-glass rounded-2xl p-6 flex flex-col gap-4">
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={13} className={i < review.stars ? 'text-brand-400 fill-brand-400' : 'text-brand-800'} />
-                    ))}
-                  </div>
-                  <p className="text-brand-500 text-sm leading-relaxed italic flex-1">"{review.comment}"</p>
-                  <div>
-                    <p className="text-brand-200 text-sm font-semibold">{review.name}</p>
-                    {review.profession && <p className="text-brand-700 text-xs">{review.profession}</p>}
-                    <p className="text-brand-900 text-[10px] mt-0.5">
-                      {new Date(review.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <ReviewsCarousel />
         </div>
       </section>
 
-      {/* ── CTA Banner ── */}
+      {/* ── Trusted Brands Marquee ── */}
+      <TrustedBrands />
+
+      {/* ── CTA ── */}
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <div className="card-glass rounded-3xl p-10 sm:p-14 border-brand-700/40 relative overflow-hidden">
@@ -124,7 +84,7 @@ export function HomePage({ onViewMenu }: HomePageProps) {
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-brand-200 mb-4 relative">Ready to Order?</h2>
             <p className="text-brand-600 mb-8 relative">Browse our seasonal menu and add your favourites to the cart.</p>
-            <button onClick={onViewMenu} className="btn-primary px-8 py-3 text-base rounded-full shadow-lg shadow-brand-950/60 relative">
+            <button onClick={onViewMenu} className="btn-primary px-8 py-3 text-base rounded-full shadow-lg shadow-brand-950/60 relative gap-2 inline-flex items-center">
               View Full Menu <ArrowRight size={15} />
             </button>
           </div>

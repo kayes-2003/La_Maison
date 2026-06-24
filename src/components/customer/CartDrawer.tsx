@@ -1,4 +1,4 @@
-import { useState } from 'react'
+// import { useState } from 'react'
 import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard } from 'lucide-react'
 import { discountedPrice, formatPrice, isValidUrl } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -17,7 +17,6 @@ interface CartDrawerProps {
 export function CartDrawer({
   summary, userId, onClose, onRemove, onUpdateQty, onClear, onCheckout,
 }: CartDrawerProps) {
-  const [showPayment, setShowPayment] = useState(false)
 
   const handleCheckout = () => {
     if (!userId) {
@@ -25,16 +24,8 @@ export function CartDrawer({
       return
     }
     if (onCheckout) { onCheckout(); return }
-    setShowPayment(true)
   }
 
-  const handlePaymentSuccess = (paymentIntentId: string) => {
-    console.log('Payment succeeded:', paymentIntentId)
-    toast.success('🎉 Order placed successfully!', { duration: 4000 })
-    onClear()
-    setShowPayment(false)
-    onClose()
-  }
 
   return (
     <>
@@ -164,14 +155,7 @@ export function CartDrawer({
         )}
       </div>
 
-      {/* Payment Modal */}
-      {showPayment && (
-        <PaymentModal
-          summary={summary}
-          onClose={() => setShowPayment(false)}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
+
     </>
   )
 }

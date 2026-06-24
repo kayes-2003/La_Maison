@@ -11,31 +11,27 @@ export interface DashboardData {
   itemSales:    { name: string; qty: number; revenue: number }[]
   dailySales:   { date: string; revenue: number; orders: number }[]
   loading:      boolean
+  reload:       () => void
 }
 
 export function useDashboard(): DashboardData {
   const [orders,  setOrders]  = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
+  const fetchOrders = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('orders').select('*').order('created_at', { ascending: false })
+    if (!error && data) setOrders(data as Order[])
+    setLoading(false)
+  }
+
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('status', 'paid')
-        .order('created_at', { ascending: false })
-      if (!error && data) setOrders(data as Order[])
-      setLoading(false)
-    }
-
     fetchOrders()
-
     const sub = supabase
       .channel('orders_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
       .subscribe()
-
     return () => { supabase.removeChannel(sub) }
   }, [])
 
@@ -76,6 +72,6 @@ export function useDashboard(): DashboardData {
 
   return {
     orders, todayOrders, todayRevenue, totalRevenue,
-    totalOrders: orders.length, itemSales, dailySales, loading,
+    totalOrders: orders.length, itemSales, dailySales, loading, reload: fetchOrders,
   }
 }

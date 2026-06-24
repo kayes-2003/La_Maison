@@ -31,9 +31,11 @@ module.exports = {
         },
       },
       animation: {
-        'fade-up': 'fadeUp 0.4s ease both',
-        'slide-in': 'slideIn 0.3s ease both',
+        'fade-up':    'fadeUp 0.4s ease both',
+        'slide-in':   'slideIn 0.3s ease both',
         'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
+        'marquee':    'marquee 28s linear infinite',
+        'shimmer':    'shimmer 2.5s ease-in-out infinite',
       },
       keyframes: {
         fadeUp: {
@@ -47,6 +49,14 @@ module.exports = {
         pulseSoft: {
           '0%,100%': { opacity: '1' },
           '50%': { opacity: '0.6' },
+        },
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to:   { transform: 'translateX(-33.333%)' },
+        },
+        shimmer: {
+          '0%':   { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(400%)' },
         },
       },
     },

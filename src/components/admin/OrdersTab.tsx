@@ -1,4 +1,4 @@
-import { useState } from 'react'
+// import { useState } from 'react'
 import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard, Package } from 'lucide-react'
 import { discountedPrice, formatPrice, isValidUrl } from '@/lib/utils'
 import toast from 'react-hot-toast'

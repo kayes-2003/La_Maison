@@ -1,50 +1,42 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Package, CheckCircle2, Truck, ShoppingBag,
   Star, Receipt, Phone, User, X, RefreshCw,
-  Clock, MapPin, ChevronDown, ChevronUp,
+  Clock, MapPin, ChevronDown, ChevronUp, Wifi, WifiOff,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/utils'
 import type { Order, TrackingStatus } from '@/types'
 
 // ─── Step config ──────────────────────────────────────────────
-
-const STEPS: { id: TrackingStatus; label: string; desc: string; icon: typeof Clock }[] = [
-  { id: 'pending',      label: 'Order Placed',        desc: 'Your order has been received.',           icon: Clock },
-  { id: 'confirmed',    label: 'Confirmed',            desc: 'Restaurant confirmed your order.',        icon: CheckCircle2 },
-  { id: 'preparing',   label: 'Preparing',            desc: 'Your food is being prepared.',            icon: ShoppingBag },
-  { id: 'parcel_picked',label: 'Parcel Picked',        desc: 'Delivery partner picked up your order.',  icon: Package },
-  { id: 'on_the_way',  label: 'On the Way',           desc: 'Your order is out for delivery!',         icon: Truck },
-  { id: 'delivered',   label: 'Delivered',            desc: 'Enjoy your meal! 🎉',                     icon: Star },
+const STEPS: { id: TrackingStatus; label: string; desc: string; icon: React.ElementType }[] = [
+  { id: 'pending',       label: 'Order Placed',   desc: 'Your order has been received.',            icon: Clock },
+  { id: 'confirmed',     label: 'Confirmed',       desc: 'Restaurant confirmed your order.',         icon: CheckCircle2 },
+  { id: 'preparing',     label: 'Preparing',       desc: 'Your food is being prepared fresh.',       icon: ShoppingBag },
+  { id: 'parcel_picked', label: 'Parcel Picked',   desc: 'Delivery partner has picked up your order.',icon: Package },
+  { id: 'on_the_way',   label: 'On the Way',      desc: 'Your order is out for delivery! 🚀',       icon: Truck },
+  { id: 'delivered',    label: 'Delivered',        desc: 'Enjoy your meal! 🎉',                      icon: Star },
 ]
-
 const stepIndex = (s: TrackingStatus) => STEPS.findIndex(x => x.id === s)
 
 // ─── Invoice modal ────────────────────────────────────────────
-
 function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void }) {
-  const print = () => window.print()
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white text-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 print:shadow-none">
-        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 print:hidden"><X size={16} /></button>
-
-        {/* Invoice */}
+      <div className="relative bg-white text-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><X size={16} /></button>
         <div className="text-center mb-5">
           <p className="text-2xl font-bold font-serif">La Maison</p>
           <p className="text-xs text-gray-500 mt-1">Fine Dining · Est. 2024</p>
           <p className="text-xs text-gray-400 mt-0.5">Tax Invoice</p>
         </div>
-
         <div className="border-t border-b border-dashed border-gray-300 py-3 space-y-1 text-xs text-gray-500 mb-4">
           <div className="flex justify-between"><span>Order ID</span><span className="font-mono text-gray-700">#{order.id.slice(0,8).toUpperCase()}</span></div>
           <div className="flex justify-between"><span>Date</span><span>{new Date(order.created_at).toLocaleString('en-GB')}</span></div>
           {order.payment_method && <div className="flex justify-between"><span>Payment</span><span className="capitalize">{order.payment_method}</span></div>}
-          {order.delivery_address?.full_name && <div className="flex justify-between"><span>Customer</span><span>{order.delivery_address.full_name}</span></div>}
+          {(order.delivery_address as Record<string,string>)?.full_name && <div className="flex justify-between"><span>Customer</span><span>{(order.delivery_address as Record<string,string>).full_name}</span></div>}
         </div>
-
         <div className="space-y-1.5 mb-4">
           {order.items.map((item, i) => (
             <div key={i} className="flex justify-between text-sm">
@@ -53,90 +45,120 @@ function InvoiceModal({ order, onClose }: { order: Order; onClose: () => void })
             </div>
           ))}
         </div>
-
         <div className="border-t border-dashed border-gray-300 pt-3 flex justify-between font-bold text-base">
-          <span>Total</span>
-          <span className="font-mono">{formatPrice(order.total)}</span>
+          <span>Total</span><span className="font-mono">{formatPrice(order.total)}</span>
         </div>
-
         <p className="text-center text-xs text-gray-400 mt-5">Thank you for dining with us!</p>
-
-        <button onClick={print} className="mt-4 w-full py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors print:hidden">
-          🖨️ Print Invoice
-        </button>
+        <button onClick={() => window.print()} className="mt-4 w-full py-2.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors">🖨️ Print</button>
       </div>
     </div>
   )
 }
 
-// ─── Single Order Card ────────────────────────────────────────
+// ─── Live pulse dot ───────────────────────────────────────────
+function LiveDot({ active }: { active: boolean }) {
+  if (!active) return null
+  return (
+    <span className="relative inline-flex ml-1.5">
+      <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
+      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+    </span>
+  )
+}
 
-function OrderTrackCard({ order, onRefresh }: { order: Order; onRefresh: () => void }) {
+// ─── Single order card ────────────────────────────────────────
+function OrderTrackCard({ order, isNew }: { order: Order; isNew: boolean }) {
   const [expanded,    setExpanded]    = useState(false)
   const [showInvoice, setShowInvoice] = useState(false)
+  const [flash,       setFlash]       = useState(isNew)
 
-  const current    = order.tracking_status ?? 'pending'
-  const curIdx     = stepIndex(current)
-  const cancelled  = current === 'cancelled'
+  // Flash highlight on live update
+  useEffect(() => {
+    if (isNew) {
+      setFlash(true)
+      const t = setTimeout(() => setFlash(false), 2500)
+      return () => clearTimeout(t)
+    }
+  }, [isNew, order.tracking_status])
+
+  const cur     = order.tracking_status ?? 'pending'
+  const curIdx  = stepIndex(cur)
+  const cancelled = cur === 'cancelled'
+  const pct     = cancelled ? 0 : (curIdx / (STEPS.length - 1)) * 100
 
   return (
-    <div className="card-glass rounded-2xl overflow-hidden border-brand-800/40">
-      {/* Header */}
-      <div
-        className="flex items-center gap-3 px-4 py-3.5 cursor-pointer"
-        onClick={() => setExpanded(e => !e)}
-      >
-        {/* Status icon */}
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-          cancelled              ? 'bg-red-950/50 border border-red-800/40'
-          : current === 'delivered' ? 'bg-green-950/50 border border-green-800/40'
-          : 'bg-brand-900/60 border border-brand-800/40'
+    <div className={`rounded-2xl overflow-hidden border transition-all duration-500 ${
+      flash ? 'border-green-500/60 shadow-lg shadow-green-900/30' : 'border-brand-800/40 bg-surface-50'
+    }`}>
+
+      {/* Live update flash banner */}
+      {flash && (
+        <div className="bg-green-900/40 border-b border-green-700/30 px-4 py-1.5 flex items-center gap-2">
+          <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"/><span className="relative inline-flex rounded-full h-2 w-2 bg-green-400"/></span>
+          <span className="text-green-300 text-xs font-semibold">Order status updated just now</span>
+        </div>
+      )}
+
+      {/* Header row */}
+      <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer" onClick={() => setExpanded(e => !e)}>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+          cancelled ? 'bg-red-950/50 border-red-800/40'
+          : cur === 'delivered' ? 'bg-green-950/50 border-green-800/40'
+          : 'bg-brand-900/60 border-brand-800/40'
         }`}>
-          {cancelled ? <X size={16} className="text-red-400" />
-            : current === 'delivered' ? <Star size={16} className="text-green-400 fill-green-400" />
-            : <Truck size={16} className="text-brand-400" />
-          }
+          {(() => { const S = STEPS.find(s=>s.id===cur)!; const Icon = S.icon; return <Icon size={16} className={cancelled ? 'text-red-400' : cur==='delivered' ? 'text-green-400' : 'text-brand-400'} /> })()}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-brand-200 text-xs font-bold">#{order.id.slice(0,8).toUpperCase()}</span>
             <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${
-              cancelled              ? 'bg-red-950/50 text-red-400 border-red-800/40'
-              : current === 'delivered' ? 'bg-green-950/50 text-green-400 border-green-800/40'
+              cancelled ? 'bg-red-950/50 text-red-400 border-red-800/40'
+              : cur === 'delivered' ? 'bg-green-950/50 text-green-400 border-green-800/40'
               : 'bg-brand-900/60 text-brand-400 border-brand-800/40'
             }`}>
-              {STEPS.find(s => s.id === current)?.label ?? current}
+              {STEPS.find(s=>s.id===cur)?.label ?? cur}
             </span>
           </div>
           <p className="text-brand-700 text-xs mt-0.5">
-            {new Date(order.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
+            {new Date(order.created_at).toLocaleString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
             {' · '}{formatPrice(order.total)}
           </p>
         </div>
-
         {expanded ? <ChevronUp size={14} className="text-brand-700 shrink-0" /> : <ChevronDown size={14} className="text-brand-700 shrink-0" />}
       </div>
 
-      {/* Expanded body */}
+      {/* Progress bar (always visible) */}
+      {!cancelled && (
+        <div className="px-4 pb-3">
+          <div className="relative h-1 bg-brand-900/60 rounded-full overflow-hidden">
+            <div
+              className="absolute left-0 top-0 h-full bg-brand-400 rounded-full transition-all duration-700"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-[9px] text-brand-800">Placed</span>
+            <span className="text-[9px] text-brand-800">Delivered</span>
+          </div>
+        </div>
+      )}
+
+      {/* Expanded */}
       {expanded && (
         <div className="px-4 pb-4 border-t border-brand-900/20 space-y-5 pt-4">
 
-          {/* Progress tracker */}
+          {/* Step list */}
           {!cancelled ? (
             <div className="relative">
-              {/* Vertical line */}
               <div className="absolute left-4 top-4 bottom-4 w-px bg-brand-900/60" />
-              <div
-                className="absolute left-4 top-4 w-px bg-brand-500 transition-all duration-700"
-                style={{ height: `${(curIdx / (STEPS.length - 1)) * 100}%` }}
-              />
-
+              <div className="absolute left-4 top-4 w-px bg-brand-500 transition-all duration-700"
+                style={{ height: `${pct}%` }} />
               <div className="space-y-4">
                 {STEPS.map((step, i) => {
-                  const done    = i <= curIdx
-                  const active  = i === curIdx
-                  const Icon    = step.icon
+                  const done   = i <= curIdx
+                  const active = i === curIdx
+                  const Icon   = step.icon
                   return (
                     <div key={step.id} className="flex items-start gap-4">
                       <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-300 ${
@@ -146,12 +168,15 @@ function OrderTrackCard({ order, onRefresh }: { order: Order; onRefresh: () => v
                       }`}>
                         <Icon size={13} className={active ? 'text-surface' : done ? 'text-brand-300' : 'text-brand-800'} />
                       </div>
-                      <div className={`pt-1 transition-opacity duration-300 ${done ? 'opacity-100' : 'opacity-40'}`}>
+                      <div className={`pt-1 ${done ? 'opacity-100' : 'opacity-35'}`}>
                         <p className={`text-sm font-semibold ${active ? 'text-brand-200' : done ? 'text-brand-400' : 'text-brand-700'}`}>
                           {step.label}
                           {active && <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />}
                         </p>
                         <p className="text-brand-700 text-xs">{step.desc}</p>
+                        {active && order.tracking_note && (
+                          <p className="text-brand-500 text-xs mt-0.5 italic">"{order.tracking_note}"</p>
+                        )}
                       </div>
                     </div>
                   )
@@ -165,34 +190,25 @@ function OrderTrackCard({ order, onRefresh }: { order: Order; onRefresh: () => v
             </div>
           )}
 
-          {/* Delivery person card */}
-          {current === 'on_the_way' && (order.delivery_name || order.delivery_phone) && (
+          {/* Delivery person */}
+          {cur === 'on_the_way' && (order.delivery_name || order.delivery_phone) && (
             <div className="p-3.5 bg-brand-900/30 border border-brand-800/30 rounded-xl space-y-2">
-              <p className="text-brand-500 text-xs font-semibold uppercase tracking-wide">Delivery Partner</p>
-              {order.delivery_name && (
-                <div className="flex items-center gap-2 text-sm text-brand-300">
-                  <User size={13} className="text-brand-600" /> {order.delivery_name}
-                </div>
-              )}
-              {order.delivery_phone && (
-                <a href={`tel:${order.delivery_phone}`}
-                  className="flex items-center gap-2 text-sm text-brand-400 hover:text-brand-200 transition-colors">
-                  <Phone size={13} className="text-brand-600" /> {order.delivery_phone}
-                </a>
-              )}
+              <p className="text-brand-500 text-xs font-semibold uppercase tracking-wide">Your Delivery Partner</p>
+              {order.delivery_name  && <div className="flex items-center gap-2 text-sm text-brand-300"><User size={13} className="text-brand-600" />{order.delivery_name}</div>}
+              {order.delivery_phone && <a href={`tel:${order.delivery_phone}`} className="flex items-center gap-2 text-sm text-brand-400 hover:text-brand-200 transition-colors"><Phone size={13} className="text-brand-600" />{order.delivery_phone}</a>}
             </div>
           )}
 
-          {/* Delivery address */}
-          {order.delivery_address?.address_line1 && (
+          {/* Address */}
+          {(order.delivery_address as Record<string,string>)?.address_line1 && (
             <div className="flex items-start gap-2 text-xs text-brand-600">
               <MapPin size={12} className="shrink-0 mt-0.5 text-brand-700" />
-              <span>{[order.delivery_address.address_line1, order.delivery_address.city, order.delivery_address.district].filter(Boolean).join(', ')}</span>
+              <span>{[(order.delivery_address as Record<string,string>).address_line1, (order.delivery_address as Record<string,string>).city, (order.delivery_address as Record<string,string>).district].filter(Boolean).join(', ')}</span>
             </div>
           )}
 
-          {/* Items summary */}
-          <div className="space-y-1.5 pt-2 border-t border-brand-900/20">
+          {/* Items */}
+          <div className="space-y-1 pt-2 border-t border-brand-900/20">
             {order.items.map((item, i) => (
               <div key={i} className="flex justify-between text-xs">
                 <span className="text-brand-600">{item.quantity}× {item.name}</span>
@@ -205,15 +221,9 @@ function OrderTrackCard({ order, onRefresh }: { order: Order; onRefresh: () => v
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button onClick={onRefresh} className="btn-ghost flex-1 gap-1.5 text-xs py-2">
-              <RefreshCw size={12} /> Refresh
-            </button>
-            <button onClick={() => setShowInvoice(true)} className="btn-outline flex-1 gap-1.5 text-xs py-2">
-              <Receipt size={12} /> Invoice
-            </button>
-          </div>
+          <button onClick={() => setShowInvoice(true)} className="btn-outline w-full gap-1.5 text-xs py-2">
+            <Receipt size={12} /> View Invoice
+          </button>
         </div>
       )}
 
@@ -222,47 +232,71 @@ function OrderTrackCard({ order, onRefresh }: { order: Order; onRefresh: () => v
   )
 }
 
-// ─── Main Page ────────────────────────────────────────────────
-
-interface OrderTrackingPageProps {
-  userId: string
-}
-
-export function OrderTrackingPage({ userId }: OrderTrackingPageProps) {
-  const [orders,  setOrders]  = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
+// ─── Page ─────────────────────────────────────────────────────
+export function OrderTrackingPage({ userId }: { userId: string }) {
+  const [orders,    setOrders]    = useState<Order[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [connected, setConnected] = useState(false)
+  const [newIds,    setNewIds]    = useState<Set<string>>(new Set())
+  const prevStatusRef = useRef<Record<string, TrackingStatus>>({})
 
   const load = async () => {
-    setLoading(true)
     const { data } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20)
+      .from('orders').select('*').eq('user_id', userId)
+      .order('created_at', { ascending: false }).limit(20)
     if (data) setOrders(data as Order[])
     setLoading(false)
   }
 
   useEffect(() => { load() }, [userId])
 
-  // Realtime subscription
+  // ── Realtime — targeted row patch, not full reload ────────
   useEffect(() => {
     const channel = supabase
-      .channel('order-updates')
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'orders',
-        filter: `user_id=eq.${userId}`,
-      }, () => load())
-      .subscribe()
+      .channel(`orders:${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const updated = payload.new as Order
+          setOrders(prev =>
+            prev.map(o => o.id === updated.id ? updated : o)
+          )
+          // Check if tracking_status actually changed
+          const prev = prevStatusRef.current[updated.id]
+          if (prev && prev !== updated.tracking_status) {
+            setNewIds(ids => new Set([...ids, updated.id]))
+            setTimeout(() => setNewIds(ids => { const n = new Set(ids); n.delete(updated.id); return n }), 4000)
+          }
+          prevStatusRef.current[updated.id] = updated.tracking_status
+        }
+      )
+      .subscribe(status => {
+        setConnected(status === 'SUBSCRIBED')
+      })
     return () => { supabase.removeChannel(channel) }
   }, [userId])
+
+  // Seed prevStatus ref once orders load
+  useEffect(() => {
+    orders.forEach(o => {
+      if (!prevStatusRef.current[o.id]) {
+        prevStatusRef.current[o.id] = o.tracking_status
+      }
+    })
+  }, [orders])
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="font-display text-3xl font-bold text-brand-300 mb-2">My Orders</h1>
-        <p className="text-brand-700 text-sm">Track your deliveries in real time</p>
+        <div className="flex items-center justify-center gap-2">
+          <p className="text-brand-700 text-sm">Live delivery tracking</p>
+          {connected
+            ? <span className="flex items-center gap-1 text-green-400 text-xs"><Wifi size={11} />Live<LiveDot active /></span>
+            : <span className="flex items-center gap-1 text-brand-800 text-xs"><WifiOff size={11} />Connecting…</span>
+          }
+        </div>
       </div>
 
       {loading ? (
@@ -278,10 +312,15 @@ export function OrderTrackingPage({ userId }: OrderTrackingPageProps) {
       ) : (
         <div className="space-y-3">
           {orders.map(order => (
-            <OrderTrackCard key={order.id} order={order} onRefresh={load} />
+            <OrderTrackCard key={order.id} order={order} isNew={newIds.has(order.id)} />
           ))}
         </div>
       )}
+
+      <p className="text-center text-brand-900 text-xs mt-8 flex items-center justify-center gap-1.5">
+        <RefreshCw size={10} />
+        Page auto-updates when admin changes your order status
+      </p>
     </div>
   )
 }

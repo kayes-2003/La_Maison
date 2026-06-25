@@ -29,10 +29,11 @@ function TrackingPanel({ order, onDone }: { order: Order; onDone: () => void }) 
   const [dPhone, setDPhone] = useState(order.delivery_phone ?? '')
   const [note,   setNote]   = useState(order.tracking_note  ?? '')
   const [saving, setSaving] = useState(false)
+  const [saved,  setSaved]  = useState(false)
 
   const save = async () => {
     setSaving(true)
-    await supabase.from('orders').update({
+    const { error } = await supabase.from('orders').update({
       tracking_status: status,
       delivery_name:   dName  || null,
       delivery_phone:  dPhone || null,
@@ -40,7 +41,11 @@ function TrackingPanel({ order, onDone }: { order: Order; onDone: () => void }) 
       delivered_at:    status === 'delivered' ? new Date().toISOString() : null,
     }).eq('id', order.id)
     setSaving(false)
-    onDone()
+    if (!error) {
+      setSaved(true)
+      // Customer gets the update via Supabase Realtime automatically
+      setTimeout(() => { setSaved(false); onDone() }, 1200)
+    }
   }
 
   return (
@@ -75,8 +80,8 @@ function TrackingPanel({ order, onDone }: { order: Order; onDone: () => void }) 
       </div>
       <div className="flex gap-2 justify-end">
         <button onClick={onDone} className="btn-ghost gap-1.5 text-sm"><X size={13} /> Cancel</button>
-        <button onClick={save} disabled={saving} className="btn-primary gap-1.5 text-sm">
-          {saving ? 'Saving…' : <><Save size={13} /> Update</>}
+        <button onClick={save} disabled={saving || saved} className="btn-primary gap-1.5 text-sm">
+          {saved ? <span className="flex items-center gap-1.5 text-green-300">✓ Sent live to customer</span> : saving ? 'Saving…' : <><Save size={13} /> Update & Notify</>}
         </button>
       </div>
     </div>

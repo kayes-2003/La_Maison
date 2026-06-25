@@ -253,20 +253,24 @@ export function OrderTrackingPage({ userId }: { userId: string }) {
   // ── Realtime — targeted row patch, not full reload ────────
   useEffect(() => {
     const channel = supabase
-      .channel(`orders:${userId}`)
+      .channel('orders-tracking')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+        { event: 'UPDATE', schema: 'public', table: 'orders' },
         (payload) => {
           const updated = payload.new as Order
+          // Only process this user's orders
+          if (updated.user_id !== userId) return
           setOrders(prev =>
-            prev.map(o => o.id === updated.id ? updated : o)
+            prev.map(o => o.id === updated.id ? { ...o, ...updated } : o)
           )
-          // Check if tracking_status actually changed
+          // Flash if tracking_status changed
           const prev = prevStatusRef.current[updated.id]
-          if (prev && prev !== updated.tracking_status) {
+          if (prev !== updated.tracking_status) {
             setNewIds(ids => new Set([...ids, updated.id]))
-            setTimeout(() => setNewIds(ids => { const n = new Set(ids); n.delete(updated.id); return n }), 4000)
+            setTimeout(() => setNewIds(ids => {
+              const n = new Set(ids); n.delete(updated.id); return n
+            }), 5000)
           }
           prevStatusRef.current[updated.id] = updated.tracking_status
         }
